@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High Vision Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: Arial, sans-serif; background:#0f0f0f; color:#fff; min-height:100vh; }
+
+/* HEADER */
+.header { background:#1a1a1a; padding:16px 28px; border-bottom:2px solid #c0392b; display:flex; align-items:center; justify-content:space-between; }
+.header h1 { font-size:20px; font-weight:700; letter-spacing:1px; }
+.header h1 span { color:#c0392b; }
+.header .date { font-size:12px; color:#666; }
+
+/* TABS */
+.tabs { display:flex; background:#1a1a1a; padding:0 28px; border-bottom:1px solid #222; overflow-x:auto; }
+.tab { padding:13px 20px; cursor:pointer; font-size:13px; font-weight:600; color:#666; border-bottom:3px solid transparent; white-space:nowrap; transition:all 0.2s; }
+.tab.active { color:#c0392b; border-bottom-color:#c0392b; }
+.tab:hover { color:#fff; }
+
+/* PAGES */
+.page { display:none; padding:24px 28px; max-width:1200px; margin:0 auto; }
+.page.active { display:block; }
+
+/* CARDS */
+.card { background:#1a1a1a; border-radius:10px; padding:20px; border:1px solid #222; margin-bottom:20px; }
+.card h3 { font-size:12px; font-weight:700; color:#666; text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; }
+
+/* GRID */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.grid-5 { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:20px; }
+
+/* STAT CARDS */
+.stat { background:#1a1a1a; border-radius:10px; padding:16px; border:1px solid #222; text-align:center; }
+.stat .lbl { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.stat .val { font-size:28px; font-weight:700; }
+.stat .sub { font-size:11px; color:#c0392b; margin-top:3px; font-weight:600; }
+.stat.red { border-color:#c0392b; }
+.stat.red .val { color:#c0392b; }
+
+/* FUNNEL */
+.funnel { display:flex; align-items:center; margin-bottom:20px; }
+.funnel-step { flex:1; text-align:center; padding:14px 8px; background:#111; }
+.funnel-step:first-child { border-radius:8px 0 0 8px; }
+.funnel-step:last-child { border-radius:0 8px 8px 0; }
+.funnel-step .fl { font-size:10px; color:#666; text-transform:uppercase; }
+.funnel-step .fv { font-size:22px; font-weight:700; }
+.funnel-step .fr { font-size:11px; color:#c0392b; font-weight:600; }
+.funnel-arrow { color:#333; font-size:20px; flex-shrink:0; padding:0 4px; }
+
+/* FORM */
+.form-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+.fg { display:flex; flex-direction:column; gap:5px; }
+.fg label { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:0.5px; }
+.fg input, .fg select { background:#111; border:1px solid #333; border-radius:6px; padding:9px 11px; color:#fff; font-size:13px; }
+.fg input:focus, .fg select:focus { outline:none; border-color:#c0392b; }
+.fg select option { background:#1a1a1a; }
+
+/* BUTTONS */
+.btn { background:#c0392b; color:#fff; border:none; border-radius:6px; padding:9px 18px; cursor:pointer; font-size:13px; font-weight:700; white-space:nowrap; transition:background 0.2s; height:38px; }
+.btn:hover { background:#e74c3c; }
+.btn-sm { padding:5px 12px; font-size:11px; height:28px; border-radius:4px; }
+.btn-ghost { background:transparent; border:1px solid #333; color:#666; }
+.btn-ghost:hover { border-color:#c0392b; color:#c0392b; background:transparent; }
+.btn-green { background:#27ae60; }
+.btn-green:hover { background:#2ecc71; }
+
+/* TABLE */
+.tbl { width:100%; border-collapse:collapse; font-size:13px; }
+.tbl th { text-align:left; padding:8px 10px; color:#666; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #222; }
+.tbl td { padding:9px 10px; border-bottom:1px solid #1a1a1a; vertical-align:middle; }
+.tbl tr:hover td { background:#1e1e1e; }
+.rate { color:#c0392b; font-weight:600; }
+.del-btn { background:none; border:none; color:#444; cursor:pointer; font-size:16px; padding:2px 6px; }
+.del-btn:hover { color:#c0392b; }
+
+/* FOLLOW-UP */
+.due-banner { background:#c0392b22; border:1px solid #c0392b55; border-radius:8px; padding:14px 18px; margin-bottom:20px; }
+.due-banner h4 { color:#c0392b; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+.due-item { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #c0392b22; }
+.due-item:last-child { border-bottom:none; }
+.due-name { font-weight:700; font-size:14px; flex:1; }
+.due-step { background:#c0392b; color:#fff; border-radius:4px; padding:2px 8px; font-size:11px; font-weight:700; }
+.due-type { font-size:11px; color:#888; }
+.due-msg { font-size:12px; color:#aaa; flex:2; font-style:italic; }
+
+.prospect-card { background:#111; border-radius:8px; padding:14px; border:1px solid #222; margin-bottom:10px; display:flex; align-items:center; gap:14px; }
+.prospect-card.overdue { border-color:#c0392b55; }
+.prospect-card.done { opacity:0.4; }
+.pc-name { font-weight:700; font-size:14px; flex:1.5; }
+.pc-platform { font-size:11px; color:#888; }
+.pc-type { font-size:11px; background:#222; padding:2px 8px; border-radius:4px; }
+.pc-step { font-size:12px; font-weight:700; flex:1; }
+.pc-next { font-size:11px; color:#888; flex:1; }
+.pc-status { font-size:11px; }
+.pc-actions { display:flex; gap:6px; }
+
+.step-badge { display:inline-block; background:#c0392b22; color:#c0392b; border:1px solid #c0392b55; border-radius:4px; padding:2px 8px; font-size:11px; font-weight:700; }
+
+/* SCRIPTS TAB */
+.script-nav { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.script-btn { background:#111; border:1px solid #333; border-radius:6px; padding:8px 16px; cursor:pointer; font-size:13px; color:#888; transition:all 0.2s; }
+.script-btn.active { background:#c0392b22; border-color:#c0392b; color:#fff; }
+.script-content { display:none; }
+.script-content.active { display:block; }
+.script-block { background:#111; border-radius:8px; padding:16px; border-left:3px solid #c0392b; margin-bottom:14px; }
+.script-block .tag { font-size:10px; color:#c0392b; text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:8px; }
+.script-block .text { font-size:14px; line-height:1.7; color:#ddd; }
+.script-block .note { font-size:11px; color:#666; margin-top:8px; font-style:italic; }
+.copy-btn { background:#222; border:1px solid #333; color:#888; border-radius:4px; padding:4px 10px; font-size:11px; cursor:pointer; float:right; margin-top:-4px; }
+.copy-btn:hover { border-color:#c0392b; color:#c0392b; }
+
+/* DAILY TARGETS */
+.targets-row { display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+.target-item { background:#111; border-radius:8px; padding:14px 20px; border:1px solid #222; text-align:center; flex:1; min-width:120px; }
+.target-item .tl { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+.target-item .tv { font-size:26px; font-weight:700; color:#c0392b; }
+.target-item .ts { font-size:11px; color:#666; margin-top:2px; }
+
+/* CHART */
+.chart-wrap { position:relative; height:190px; }
+
+/* GOAL */
+.goal-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px; }
+.goal-needed { background:#111; border-radius:8px; padding:14px; }
+.gn-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:10px; }
+.gn-item { text-align:center; }
+.gn-item .gl { font-size:10px; color:#666; text-transform:uppercase; }
+.gn-item .gv { font-size:20px; font-weight:700; color:#c0392b; margin-top:2px; }
+
+.empty { text-align:center; padding:30px; color:#444; font-size:13px; }
+.badge-green { background:#27ae6022; color:#27ae60; border:1px solid #27ae6055; border-radius:4px; padding:2px 8px; font-size:11px; }
+.badge-red { background:#c0392b22; color:#c0392b; border:1px solid #c0392b55; border-radius:4px; padding:2px 8px; font-size:11px; }
+.badge-grey { background:#22222; color:#888; border:1px solid #333; border-radius:4px; padding:2px 8px; font-size:11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>HIGH VISION <span>TRACKER</span></h1>
+  <div style="display:flex;align-items:center;gap:20px;">
+    <div id="syncStatus" style="font-size:12px;color:#666;">Loading...</div>
+    <button onclick="loadFromSheets().then(renderAll)" style="background:#222;border:1px solid #333;color:#888;border-radius:5px;padding:5px 12px;cursor:pointer;font-size:12px;">↻ Refresh</button>
+    <div class="date" id="dateDisplay"></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('loom',this)">🎥 Loom Tracker</div>
+  <div class="tab" onclick="showTab('dm',this)">💬 DM Tracker</div>
+  <div class="tab" onclick="showTab('followup',this)">🔔 Follow-ups</div>
+  <div class="tab" onclick="showTab('scripts',this)">📋 Scripts</div>
+  <div class="tab" onclick="showTab('overview',this)">📊 Overview</div>
+</div>
+
+<!-- ===== LOOM PAGE ===== -->
+<div id="loom-page" class="page active">
+  <div id="loom-daily-targets" class="targets-row"></div>
+  <div id="loom-funnel" class="funnel"></div>
+  <div id="loom-stats" class="grid-5"></div>
+
+  <div class="card">
+    <h3>Log Today</h3>
+    <div class="form-row">
+      <div class="fg"><label>Date</label><input type="date" id="l-date"></div>
+      <div class="fg"><label>Sent</label><input type="number" id="l-sent" placeholder="0" style="width:80px"></div>
+      <div class="fg"><label>Seen</label><input type="number" id="l-seen" placeholder="0" style="width:80px"></div>
+      <div class="fg"><label>Replied</label><input type="number" id="l-replied" placeholder="0" style="width:80px"></div>
+      <div class="fg"><label>Booked</label><input type="number" id="l-booked" placeholder="0" style="width:80px"></div>
+      <div class="fg"><label>Closed</label><input type="number" id="l-closed" placeholder="0" style="width:80px"></div>
+      <button class="btn" onclick="logLoom()">+ Log</button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card"><h3>Looms Sent (Last 30 Days)</h3><div class="chart-wrap"><canvas id="loomChart"></canvas></div></div>
+    <div class="card"><h3>Conversion Funnel</h3><div class="chart-wrap"><canvas id="loomFunnelChart"></canvas></div></div>
+  </div>
+
+  <div class="card"><h3>History</h3><div id="loom-history"></div></div>
+</div>
+
+<!-- ===== DM PAGE ===== -->
+<div id="dm-page" class="page">
+  <div id="dm-daily-targets" class="targets-row"></div>
+  <div id="dm-funnel" class="funnel"></div>
+  <div id="dm-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;"></div>
+
+  <div class="card">
+    <h3>Log Today</h3>
+    <div class="form-row">
+      <div class="fg"><label>Date</label><input type="date" id="d-date"></div>
+      <div class="fg"><label>DMs Sent</label><input type="number" id="d-sent" placeholder="0" style="width:90px"></div>
+      <div class="fg"><label>Replies</label><input type="number" id="d-replies" placeholder="0" style="width:80px"></div>
+      <div class="fg"><label>Looms Sent</label><input type="number" id="d-looms" placeholder="0" style="width:80px"></div>
+      <div class="fg"><label>Calls Booked</label><input type="number" id="d-booked" placeholder="0" style="width:80px"></div>
+      <button class="btn" onclick="logDM()">+ Log</button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card"><h3>DMs Sent (Last 30 Days)</h3><div class="chart-wrap"><canvas id="dmChart"></canvas></div></div>
+    <div class="card"><h3>Conversion Funnel</h3><div class="chart-wrap"><canvas id="dmFunnelChart"></canvas></div></div>
+  </div>
+
+  <div class="card"><h3>History</h3><div id="dm-history"></div></div>
+</div>
+
+<!-- ===== FOLLOW-UP PAGE ===== -->
+<div id="followup-page" class="page">
+  <div id="due-today-section"></div>
+
+  <div class="card">
+    <h3>Add New Prospect</h3>
+    <div class="form-row">
+      <div class="fg"><label>Name / @username</label><input type="text" id="fp-name" placeholder="@jennifer" style="width:150px"></div>
+      <div class="fg"><label>Type</label>
+        <select id="fp-type" style="width:150px">
+          <option value="loom">Loom Follow-up</option>
+          <option value="dm">DM Sequence</option>
+        </select>
+      </div>
+      <div class="fg"><label>Platform</label>
+        <select id="fp-platform" style="width:120px">
+          <option>Instagram</option>
+          <option>iMessage</option>
+          <option>WhatsApp</option>
+          <option>LinkedIn</option>
+        </select>
+      </div>
+      <div class="fg"><label>Start Date</label><input type="date" id="fp-date"></div>
+      <div class="fg"><label>Notes</label><input type="text" id="fp-notes" placeholder="Optional..." style="width:160px"></div>
+      <button class="btn" onclick="addProspect()">+ Add</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0">All Prospects</h3>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="filterProspects('all')">All</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterProspects('active')">Active</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterProspects('due')">Due Today</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterProspects('booked')">Booked</button>
+      </div>
+    </div>
+    <div id="prospects-list"></div>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS PAGE ===== -->
+<div id="scripts-page" class="page">
+  <div class="script-nav">
+    <div class="script-btn active" onclick="showScript('loom-script',this)">🎥 Loom Script</div>
+    <div class="script-btn" onclick="showScript('dm-sequence',this)">💬 DM Sequence (Cold)</div>
+    <div class="script-btn" onclick="showScript('loom-followup',this)">🔔 Loom Follow-up Sequence</div>
+    <div class="script-btn" onclick="showScript('openers',this)">✉️ Opener Variations</div>
+    <div class="script-btn" onclick="showScript('objections',this)">⚡ Objection Handling</div>
+  </div>
+
+  <!-- LOOM SCRIPT -->
+  <div id="loom-script" class="script-content active">
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Hook — Warm Lead (already replied)</div>
+      <div class="text">"Hey [Name] — so I went through your profile and I found something that's costing you clients every single day. Give me two minutes, let me show you exactly what I mean."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Hook — Cold Outreach</div>
+      <div class="text">"Hey [Name] — I know what you're thinking. Another guy with an Asian accent in your DMs with a Loom video. Give me 30 seconds before you click off — because I found something on your profile worth your time."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Intro + Credibility</div>
+      <div class="text">"I'm Fahad. I've been working with relationship coaches — helping them get the right people onto their page, and then converting those right people into paying clients. Before I get into what I'd build for you — let me show you some of the results we've been getting."</div>
+      <div class="note">👆 Show screenshots on screen here — $40K YouTube revenue, six-figure ad account, millions of views</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Diagnosis</div>
+      <div class="text">"So I went through your last few videos — you're getting around [X] views. That's actually not bad — that's not the problem. The problem is what happens after someone watches. They go to your bio, they see a link, they click it — and now they're on a website that has to do all the heavy lifting to get them on a call. Most people just leave. What you're missing is a system that turns those viewers into booked calls automatically."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Step 1 — Attention</div>
+      <div class="text">"Phase one is attention. We reverse engineer the best performing videos in your niche, find what's working for your top competitors, and model that into your own content. On top of that we run profile visit ads so the right people are landing on your page every single day — not random viewers, your exact target audience. Your profile becomes a filter. The ad brings them in. Your content makes them trust you."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Step 2 — Nurture</div>
+      <div class="text">"Phase two is nurture. We create a VSL — a Video Sales Letter — a short video showing who you are, who you help, and the results you get. We host that on YouTube and model it around what's already working in your niche. That YouTube link goes straight into your bio. So instead of someone bouncing off your profile after 60 seconds — they click that link and spend 45 minutes watching your content. By the time they reach your booking page they already know you, they already trust you, and they're basically pre-sold before you even say hello."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Step 3 — Convert</div>
+      <div class="text">"Phase three is conversion. Every new follower that comes in gets reached out to by our appointment setter. A setter is someone on my team whose only job is to reach out to your new followers, start a conversation, qualify the ones who are ready to buy, and book them straight onto your calendar. You don't spend a minute in the DMs. You just show up to calls with people who are already ready."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Math + CTA</div>
+      <div class="text">"On average our clients get 3,100 new qualified followers a month and close 17 new clients using this exact funnel. Even at a $2K ticket that's $34,000 in potential revenue every single month.
+
+I don't record these for everyone — only accounts I genuinely think I can help. Watch this, reply back with your thoughts, and I'll send you 3 free content scripts tailored to your niche and your style. No strings attached. No sales call required. Just something valuable you can use straight away."</div>
+    </div>
+  </div>
+
+  <!-- DM SEQUENCE -->
+  <div id="dm-sequence" class="script-content">
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 1 — Opener</div>
+      <div class="text">"Hey [Name] — are you still taking on new clients?"</div>
+      <div class="note">Alternative: "I found something on your profile [Name] — mind if I share it?"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 3 — Follow-up 1 (pick one)</div>
+      <div class="text">Option B: "How do you usually help people — is it like one on one or more of a group thing?"
+
+Option C: "What does your coaching actually focus on — like where do you usually start with someone?"</div>
+      <div class="note">Stay in character as a potential client. Don't pitch yet.</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 5 — Follow-up 2</div>
+      <div class="text">"What kind of results do your clients usually see?"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 7 — Follow-up 3</div>
+      <div class="text">"How long does it usually take to see results with you?"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 9 — Follow-up 4</div>
+      <div class="text">"Do you have like a programme or is it more flexible depending on the person?"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 11 — Final Message (Pivot)</div>
+      <div class="text">"Hey [Name] — honestly I work with coaches in your space and I think there's something on your page worth showing you. I put together a quick video — want me to send it over?"</div>
+    </div>
+  </div>
+
+  <!-- LOOM FOLLOW-UP -->
+  <div id="loom-followup" class="script-content">
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 1 — Send Loom</div>
+      <div class="text">"Recorded something quick for you 🎥"
+[Loom link — title: "I found something on your profile [Name]"]</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 3 — Follow-up 1</div>
+      <div class="text">"Hey [Name] — did you get a chance to watch it?"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 5 — Follow-up 2</div>
+      <div class="text">"[Name] — most coaches I send this to come back saying they wish they'd seen it sooner. Worth 3 minutes when you get a chance."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 7 — Follow-up 3 (Voice Note)</div>
+      <div class="text">Send a voice note — casual 20 seconds. Just check in like a human. No pitch.</div>
+      <div class="note">Say something like: "Hey [Name] just wanted to check in on that video, hope things are good with you"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Day 10 — Final Message</div>
+      <div class="text">"Hey [Name] — I'm gonna be honest, I only reach out to accounts I genuinely think I can help. If the timing's off no worries at all — but if you're open to it I'd love to show you what I found. Either way hope things are going well."</div>
+    </div>
+  </div>
+
+  <!-- OPENERS -->
+  <div id="openers" class="script-content">
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Opener A — Curiosity (Best)</div>
+      <div class="text">"I found something on your profile [Name] — mind if I share it?"</div>
+      <div class="note">Hits: Curiosity + Ego + Low commitment. Best universal opener.</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Opener B — Pattern Interrupt</div>
+      <div class="text">"[Name] — I was about to scroll past your page but something stopped me"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Opener C — Social Proof</div>
+      <div class="text">"[Name] — I've been looking at a few pages in your niche and yours stood out for a specific reason"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Opener D — Problem Aware</div>
+      <div class="text">"Hey [Name] — are you still taking on new clients?"</div>
+      <div class="note">Classic — acts like a potential client. High response rate.</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">After they say YES to Loom</div>
+      <div class="text">"Recorded something quick for you 🎥"
+[Drop Loom link]</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">They won't click links</div>
+      <div class="text">"Haha bro it's literally just a screen recording of your own page — I'm showing you what I found. No link, no funnel, nothing to buy. Just pull it up real quick."</div>
+    </div>
+  </div>
+
+  <!-- OBJECTIONS -->
+  <div id="objections" class="script-content">
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Price too high</div>
+      <div class="text">"I hear you and I respect that. But if this system gets you 17 new clients a month at even $500 a client, that's $8,500. You're worried about $5K when the return is sitting right there?"</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">I can do this myself</div>
+      <div class="text">"100% — and honestly that's why I reached out to you specifically. You already know your stuff. The problem isn't your content, it's what happens after someone watches. That's not a content problem, that's a funnel problem. That's what I fix."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Prove it works</div>
+      <div class="text">"Fair — let me pull these up right now." [Show screenshots] "These are real accounts. I can also connect you with one of my clients directly if you want to hear it from them."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">I've been burned before</div>
+      <div class="text">"That's probably the most common thing I hear. It's the reason I structured this with a rev share — I only make serious money when you make serious money. If you don't grow I don't get paid. That's not how an agency that wants to rob you operates."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Let me think about it</div>
+      <div class="text">"Of course, I respect that. Can I just ask — what specifically do you need to think about? Is it the investment, the process, or something else? Because if there's something I haven't explained clearly I'd rather clear it up now."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Send me more info</div>
+      <div class="text">"Everything I'd put in a proposal we just covered on this call. A PDF isn't going to answer questions better than I can right now. What specifically are you still unclear on? Let's just handle it here."</div>
+    </div>
+    <div class="script-block">
+      <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+      <div class="tag">Pay per result only</div>
+      <div class="text">"The setup fee covers my costs to build the system. The rev share is where I make my real money. If I wasn't confident this works I wouldn't take 15% of nothing."</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OVERVIEW PAGE ===== -->
+<div id="overview-page" class="page">
+  <div class="card">
+    <h3>Goal Calculator</h3>
+    <div class="goal-grid">
+      <div class="fg"><label>Target Monthly Revenue ($)</label><input type="number" id="g-rev" placeholder="83333" oninput="calcGoals()"></div>
+      <div class="fg"><label>Average Ticket Price ($)</label><input type="number" id="g-ticket" placeholder="5000" oninput="calcGoals()"></div>
+      <div class="fg"><label>Close Rate (%)</label><input type="number" id="g-close" placeholder="25" oninput="calcGoals()"></div>
+    </div>
+    <div class="goal-needed">
+      <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;">You need every month to hit your goal:</div>
+      <div class="gn-grid">
+        <div class="gn-item"><div class="gl">Clients</div><div class="gv" id="gn-clients">-</div></div>
+        <div class="gn-item"><div class="gl">Calls</div><div class="gv" id="gn-calls">-</div></div>
+        <div class="gn-item"><div class="gl">Loom Views</div><div class="gv" id="gn-views">-</div></div>
+        <div class="gn-item"><div class="gl">Looms/Day</div><div class="gv" id="gn-looms">-</div></div>
+        <div class="gn-item"><div class="gl">DMs/Day</div><div class="gv" id="gn-dms">-</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card"><h3>Loom Pipeline</h3><div id="ov-loom"></div></div>
+    <div class="card"><h3>DM Pipeline</h3><div id="ov-dm"></div></div>
+  </div>
+
+  <div class="card">
+    <h3>30-Day Activity</h3>
+    <div class="chart-wrap" style="height:220px"><canvas id="overviewChart"></canvas></div>
+  </div>
+</div>
+
+<script>
+// ======= CONFIG =======
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTJo5hUGqwo8ix2zU5TuMDExtVjvYLgdV7MwEOZEu6ILBKvnD-GMEvcjV_s2PNdabvzg/exec';
+
+// ======= DATA =======
+let looms = [];
+let dms = [];
+let prospects = [];
+let goals = {};
+let charts = {};
+let prospectFilter = 'all';
+let saving = false;
+
+const DM_SEQ = ['Hey [Name] — are you still taking on new clients?','How do you usually help people — is it like one on one or more of a group thing?','What kind of results do your clients usually see?','How long does it usually take to see results with you?','Do you have like a programme or is it more flexible depending on the person?',''];
+const LOOM_SEQ = ['Sent Loom — "Recorded something quick for you 🎥"','Hey [Name] — did you get a chance to watch it?','[Name] — most coaches I send this to come back saying they wish they\'d seen it sooner. Worth 3 minutes when you get a chance.','Send a 20-second voice note — casual check in, no pitch.','Hey [Name] — I\'m gonna be honest, I only reach out to accounts I genuinely think I can help. If the timing\'s off no worries at all.'];
+const DM_DAYS = [0,3,5,7,9,11];
+const LOOM_DAYS = [0,3,5,7,10];
+
+// ======= SYNC =======
+function syncStatus(msg, color='#666') {
+  const el = document.getElementById('syncStatus');
+  if(el) { el.textContent = msg; el.style.color = color; }
+}
+
+async function loadFromSheets() {
+  syncStatus('⟳ Loading...', '#f39c12');
+  try {
+    const [loomsRes, dmsRes, prospectsRes, goalsRes] = await Promise.all([
+      fetch(SCRIPT_URL + '?action=load&type=looms').then(r=>r.json()).catch(()=>[]),
+      fetch(SCRIPT_URL + '?action=load&type=dms').then(r=>r.json()).catch(()=>[]),
+      fetch(SCRIPT_URL + '?action=load&type=prospects').then(r=>r.json()).catch(()=>[]),
+      fetch(SCRIPT_URL + '?action=load&type=goals').then(r=>r.json()).catch(()=>({}))
+    ]);
+    looms = Array.isArray(loomsRes) ? loomsRes : [];
+    dms = Array.isArray(dmsRes) ? dmsRes : [];
+    prospects = Array.isArray(prospectsRes) ? prospectsRes : [];
+    goals = (typeof goalsRes === 'object' && !Array.isArray(goalsRes)) ? goalsRes : {};
+    syncStatus('✓ Synced', '#27ae60');
+  } catch(e) {
+    syncStatus('⚠ Offline', '#c0392b');
+  }
+}
+
+async function saveToSheets(type, data) {
+  try {
+    const encoded = encodeURIComponent(JSON.stringify(data));
+    await fetch(`${SCRIPT_URL}?action=save&type=${type}&data=${encoded}`);
+    syncStatus('✓ Saved', '#27ae60');
+  } catch(e) {
+    syncStatus('⚠ Save failed', '#c0392b');
+  }
+}
+
+function save() {
+  saveToSheets('looms', looms);
+  saveToSheets('dms', dms);
+  saveToSheets('prospects', prospects);
+}
+
+// ======= INIT =======
+window.onload = async () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  ['l-date','d-date','fp-date'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = today; });
+
+  await loadFromSheets();
+
+  if(goals.rev) document.getElementById('g-rev').value = goals.rev;
+  if(goals.ticket) document.getElementById('g-ticket').value = goals.ticket;
+  if(goals.close) document.getElementById('g-close').value = goals.close;
+  renderAll();
+  calcGoals();
+};
+
+// ======= TABS =======
+function showTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(tab+'-page').classList.add('active');
+  if(tab==='overview') renderOverview();
+  if(tab==='followup') renderProspects();
+}
+
+// ======= LOG LOOM =======
+function logLoom() {
+  const e = { date:document.getElementById('l-date').value, sent:+document.getElementById('l-sent').value||0, seen:+document.getElementById('l-seen').value||0, replied:+document.getElementById('l-replied').value||0, booked:+document.getElementById('l-booked').value||0, closed:+document.getElementById('l-closed').value||0 };
+  if(!e.date) return;
+  const idx = looms.findIndex(d=>d.date===e.date);
+  if(idx>=0) { ['sent','seen','replied','booked','closed'].forEach(k=>looms[idx][k]+=e[k]); }
+  else { looms.push(e); looms.sort((a,b)=>a.date.localeCompare(b.date)); }
+  save(); ['l-sent','l-seen','l-replied','l-booked','l-closed'].forEach(id=>document.getElementById(id).value='');
+  renderLoom();
+}
+
+// ======= LOG DM =======
+function logDM() {
+  const e = { date:document.getElementById('d-date').value, sent:+document.getElementById('d-sent').value||0, replies:+document.getElementById('d-replies').value||0, looms:+document.getElementById('d-looms').value||0, booked:+document.getElementById('d-booked').value||0 };
+  if(!e.date) return;
+  const idx = dms.findIndex(d=>d.date===e.date);
+  if(idx>=0) { ['sent','replies','looms','booked'].forEach(k=>dms[idx][k]+=e[k]); }
+  else { dms.push(e); dms.sort((a,b)=>a.date.localeCompare(b.date)); }
+  save(); ['d-sent','d-replies','d-looms','d-booked'].forEach(id=>document.getElementById(id).value='');
+  renderDM();
+}
+
+// ======= TOTALS =======
+function lTot() { return looms.reduce((a,d)=>({sent:a.sent+d.sent,seen:a.seen+d.seen,replied:a.replied+d.replied,booked:a.booked+d.booked,closed:a.closed+d.closed}),{sent:0,seen:0,replied:0,booked:0,closed:0}); }
+function dTot() { return dms.reduce((a,d)=>({sent:a.sent+d.sent,replies:a.replies+d.replies,looms:a.looms+d.looms,booked:a.booked+d.booked}),{sent:0,replies:0,looms:0,booked:0}); }
+function pct(a,b) { return b>0?((a/b)*100).toFixed(1)+'%':'0%'; }
+function num(a,b) { return b>0?((a/b)*100).toFixed(1):0; }
+
+// ======= DAILY TARGETS =======
+function getDailyTargets() {
+  const rev = parseFloat(document.getElementById('g-rev')?.value)||83333;
+  const ticket = parseFloat(document.getElementById('g-ticket')?.value)||5000;
+  const closeRate = parseFloat(document.getElementById('g-close')?.value)/100||0.25;
+  const lt = lTot(); const dt = dTot();
+  const viewRate = lt.sent>0?lt.seen/lt.sent:0.3;
+  const replyRate = lt.seen>0?lt.replied/lt.seen:0.25;
+  const bookRate = lt.replied>0?lt.booked/lt.replied:0.4;
+  const dmReplyRate = dt.sent>0?dt.replies/dt.sent:0.1;
+
+  const clients = Math.ceil(rev/ticket);
+  const calls = Math.ceil(clients/closeRate);
+  const loomViews = Math.ceil(calls/(bookRate||0.4));
+  const loomsSend = Math.ceil(loomViews/(viewRate||0.3));
+  const dmSend = Math.ceil((loomsSend/(dmReplyRate||0.1))/30);
+  return { loomDay: Math.ceil(loomsSend/30), dmDay: Math.max(dmSend,100) };
+}
+
+// ======= RENDER LOOM =======
+function renderLoom() {
+  const t = lTot();
+  const tgts = getDailyTargets();
+
+  document.getElementById('loom-daily-targets').innerHTML = `
+    <div class="target-item"><div class="tl">Target Looms/Day</div><div class="tv">${tgts.loomDay}</div><div class="ts">based on your goal</div></div>
+    <div class="target-item"><div class="tl">Actual Avg/Day</div><div class="tv">${looms.length>0?(t.sent/looms.length).toFixed(0):0}</div><div class="ts">${looms.length} days tracked</div></div>
+    <div class="target-item"><div class="tl">Gap</div><div class="tv" style="color:${looms.length>0&&(t.sent/looms.length)>=tgts.loomDay?'#27ae60':'#c0392b'}">${looms.length>0?Math.max(0,tgts.loomDay-(t.sent/looms.length).toFixed(0)):tgts.loomDay}</div><div class="ts">more per day needed</div></div>
+  `;
+
+  document.getElementById('loom-funnel').innerHTML = `
+    <div class="funnel-step"><div class="fl">Sent</div><div class="fv">${t.sent}</div></div><div class="funnel-arrow">›</div>
+    <div class="funnel-step"><div class="fl">Seen</div><div class="fv">${t.seen}</div><div class="fr">${pct(t.seen,t.sent)}</div></div><div class="funnel-arrow">›</div>
+    <div class="funnel-step"><div class="fl">Replied</div><div class="fv">${t.replied}</div><div class="fr">${pct(t.replied,t.seen)}</div></div><div class="funnel-arrow">›</div>
+    <div class="funnel-step"><div class="fl">Booked</div><div class="fv">${t.booked}</div><div class="fr">${pct(t.booked,t.replied)}</div></div><div class="funnel-arrow">›</div>
+    <div class="funnel-step"><div class="fl">Closed</div><div class="fv" style="color:#c0392b">${t.closed}</div><div class="fr">${pct(t.closed,t.booked)}</div></div>
+  `;
+
+  document.getElementById('loom-stats').innerHTML = `
+    <div class="stat"><div class="lbl">Total Sent</div><div class="val">${t.sent}</div></div>
+    <div class="stat"><div class="lbl">View Rate</div><div class="val">${pct(t.seen,t.sent)}</div></div>
+    <div class="stat"><div class="lbl">Reply Rate</div><div class="val">${pct(t.replied,t.seen)}</div></div>
+    <div class="stat"><div class="lbl">Calls Booked</div><div class="val">${t.booked}</div></div>
+    <div class="stat red"><div class="lbl">Clients Closed</div><div class="val">${t.closed}</div><div class="sub">$${(t.closed*5000).toLocaleString()}</div></div>
+  `;
+
+  const hist = document.getElementById('loom-history');
+  if(!looms.length) { hist.innerHTML='<div class="empty">No entries yet.</div>'; }
+  else {
+    hist.innerHTML=`<table class="tbl"><thead><tr><th>Date</th><th>Sent</th><th>Seen</th><th>Replied</th><th>Booked</th><th>Closed</th><th></th></tr></thead><tbody>${[...looms].reverse().map((d,i)=>`<tr><td>${d.date}</td><td>${d.sent}</td><td>${d.seen} <span class="rate">${pct(d.seen,d.sent)}</span></td><td>${d.replied} <span class="rate">${pct(d.replied,d.seen)}</span></td><td>${d.booked}</td><td><strong>${d.closed}</strong></td><td><button class="del-btn" onclick="delLoom(${looms.length-1-i})">×</button></td></tr>`).join('')}</tbody></table>`;
+  }
+
+  mkChart('loomChart','bar',looms.slice(-30).map(d=>d.date.slice(5)),[{label:'Sent',data:looms.slice(-30).map(d=>d.sent),backgroundColor:'#c0392b',borderRadius:3},{label:'Seen',data:looms.slice(-30).map(d=>d.seen),backgroundColor:'#c0392b55',borderRadius:3}]);
+  mkChart('loomFunnelChart','bar',['Sent','Seen','Replied','Booked','Closed'],[{data:[t.sent,t.seen,t.replied,t.booked,t.closed],backgroundColor:['#c0392b','#e74c3c','#ff6b6b','#ff9999','#ffbbbb'],borderRadius:4}],false);
+}
+
+// ======= RENDER DM =======
+function renderDM() {
+  const t = dTot();
+  const tgts = getDailyTargets();
+
+  document.getElementById('dm-daily-targets').innerHTML = `
+    <div class="target-item"><div class="tl">Target DMs/Day</div><div class="tv">${tgts.dmDay}</div><div class="ts">based on your goal</div></div>
+    <div class="target-item"><div class="tl">Actual Avg/Day</div><div class="tv">${dms.length>0?(t.sent/dms.length).toFixed(0):0}</div><div class="ts">${dms.length} days tracked</div></div>
+    <div class="target-item"><div class="tl">Reply Rate</div><div class="tv">${pct(t.replies,t.sent)}</div><div class="ts">target: 10%+</div></div>
+    <div class="target-item"><div class="tl">Loom Conversion</div><div class="tv">${pct(t.looms,t.replies)}</div><div class="ts">replies → looms</div></div>
+  `;
+
+  document.getElementById('dm-funnel').innerHTML = `
+    <div class="funnel-step"><div class="fl">DMs Sent</div><div class="fv">${t.sent}</div></div><div class="funnel-arrow">›</div>
+    <div class="funnel-step"><div class="fl">Replies</div><div class="fv">${t.replies}</div><div class="fr">${pct(t.replies,t.sent)}</div></div><div class="funnel-arrow">›</div>
+    <div class="funnel-step"><div class="fl">Loom Sent</div><div class="fv">${t.looms}</div><div class="fr">${pct(t.looms,t.replies)}</div></div><div class="funnel-arrow">›</div>
+    <div class="funnel-step"><div class="fl">Calls Booked</div><div class="fv" style="color:#c0392b">${t.booked}</div><div class="fr">${pct(t.booked,t.looms)}</div></div>
+  `;
+
+  document.getElementById('dm-stats').innerHTML = `
+    <div class="stat"><div class="lbl">Total DMs</div><div class="val">${t.sent}</div><div class="sub">${dms.length>0?(t.sent/dms.length).toFixed(0):0}/day avg</div></div>
+    <div class="stat"><div class="lbl">Replies</div><div class="val">${t.replies}</div><div class="sub">${pct(t.replies,t.sent)}</div></div>
+    <div class="stat"><div class="lbl">Looms Sent</div><div class="val">${t.looms}</div></div>
+    <div class="stat red"><div class="lbl">Calls Booked</div><div class="val">${t.booked}</div></div>
+  `;
+
+  const hist = document.getElementById('dm-history');
+  if(!dms.length) { hist.innerHTML='<div class="empty">No entries yet.</div>'; }
+  else {
+    hist.innerHTML=`<table class="tbl"><thead><tr><th>Date</th><th>Sent</th><th>Replies</th><th>Looms</th><th>Booked</th><th></th></tr></thead><tbody>${[...dms].reverse().map((d,i)=>`<tr><td>${d.date}</td><td>${d.sent}</td><td>${d.replies} <span class="rate">${pct(d.replies,d.sent)}</span></td><td>${d.looms}</td><td><strong>${d.booked}</strong></td><td><button class="del-btn" onclick="delDM(${dms.length-1-i})">×</button></td></tr>`).join('')}</tbody></table>`;
+  }
+
+  mkChart('dmChart','bar',dms.slice(-30).map(d=>d.date.slice(5)),[{label:'DMs Sent',data:dms.slice(-30).map(d=>d.sent),backgroundColor:'#3498db',borderRadius:3},{label:'Replies',data:dms.slice(-30).map(d=>d.replies),backgroundColor:'#3498db55',borderRadius:3}]);
+  mkChart('dmFunnelChart','bar',['Sent','Replies','Looms','Booked'],[{data:[t.sent,t.replies,t.looms,t.booked],backgroundColor:['#3498db','#2980b9','#1a6fa8','#c0392b'],borderRadius:4}],false);
+}
+
+// ======= PROSPECTS =======
+function addProspect() {
+  const p = { id:Date.now(), name:document.getElementById('fp-name').value.trim(), type:document.getElementById('fp-type').value, platform:document.getElementById('fp-platform').value, startDate:document.getElementById('fp-date').value, step:0, status:'active', notes:document.getElementById('fp-notes').value };
+  if(!p.name||!p.startDate) return;
+  prospects.push(p); save();
+  document.getElementById('fp-name').value=''; document.getElementById('fp-notes').value='';
+  renderProspects();
+}
+
+function getNextDate(p) {
+  const days = p.type==='loom'?LOOM_DAYS:DM_DAYS;
+  if(p.step>=days.length) return null;
+  const start = new Date(p.startDate);
+  start.setDate(start.getDate()+days[p.step]);
+  return start.toISOString().split('T')[0];
+}
+
+function getMsg(p) {
+  const seq = p.type==='loom'?LOOM_SEQ:DM_SEQ;
+  return seq[p.step]||'—';
+}
+
+function advanceStep(id) {
+  const p = prospects.find(x=>x.id===id);
+  if(!p) return;
+  const seq = p.type==='loom'?LOOM_SEQ:DM_SEQ;
+  if(p.step<seq.length-1) p.step++; else p.status='done';
+  save(); renderProspects();
+}
+
+function markStatus(id,status) {
+  const p = prospects.find(x=>x.id===id);
+  if(p) { p.status=status; save(); renderProspects(); }
+}
+
+function delProspect(id) {
+  prospects = prospects.filter(x=>x.id!==id); save(); renderProspects();
+}
+
+function filterProspects(f) { prospectFilter=f; renderProspects(); }
+
+function renderProspects() {
+  const today = new Date().toISOString().split('T')[0];
+  const due = prospects.filter(p=>p.status==='active'&&getNextDate(p)<=today);
+
+  // Due today banner
+  const dueSec = document.getElementById('due-today-section');
+  if(due.length>0) {
+    dueSec.innerHTML=`<div class="due-banner"><h4>🔔 Send Today — ${due.length} prospect${due.length>1?'s':''}</h4>${due.map(p=>`<div class="due-item"><div class="due-name">${p.name}</div><div class="due-step">Step ${p.step+1}</div><div class="due-type">${p.type==='loom'?'🎥 Loom FU':'💬 DM Seq'} · ${p.platform}</div><div class="due-msg">"${getMsg(p).slice(0,60)}${getMsg(p).length>60?'...':''}"</div><button class="btn btn-sm btn-green" onclick="advanceStep(${p.id})">✓ Sent</button></div>`).join('')}</div>`;
+  } else {
+    dueSec.innerHTML=`<div class="due-banner" style="border-color:#27ae6055;background:#27ae6011"><h4 style="color:#27ae60">✅ Nothing due today</h4></div>`;
+  }
+
+  // Filter
+  let filtered = prospects;
+  if(prospectFilter==='active') filtered=prospects.filter(p=>p.status==='active');
+  else if(prospectFilter==='due') filtered=due;
+  else if(prospectFilter==='booked') filtered=prospects.filter(p=>p.status==='booked');
+
+  const list = document.getElementById('prospects-list');
+  if(!filtered.length) { list.innerHTML='<div class="empty">No prospects yet.</div>'; return; }
+
+  list.innerHTML = filtered.map(p => {
+    const next = getNextDate(p);
+    const isOverdue = p.status==='active'&&next&&next<=today;
+    const seq = p.type==='loom'?LOOM_SEQ:DM_SEQ;
+    const statusBadge = p.status==='booked'?'<span class="badge-green">Booked</span>':p.status==='done'?'<span class="badge-grey">Done</span>':isOverdue?'<span class="badge-red">Due</span>':'<span class="badge-grey">Active</span>';
+    return `<div class="prospect-card ${isOverdue?'overdue':''} ${p.status==='done'||p.status==='dead'?'done':''}">
+      <div style="flex:2"><div class="pc-name">${p.name}</div><div class="pc-platform">${p.platform} · ${p.type==='loom'?'Loom Follow-up':'DM Sequence'}</div></div>
+      <div class="pc-step"><span class="step-badge">Step ${p.step+1}/${seq.length}</span></div>
+      <div style="flex:2;font-size:12px;color:#888">${getMsg(p).slice(0,55)}${getMsg(p).length>55?'...':''}</div>
+      <div class="pc-next" style="font-size:11px;color:#666">Next: ${next||'Complete'}</div>
+      <div>${statusBadge}</div>
+      <div class="pc-actions">
+        ${p.status==='active'?`<button class="btn btn-sm btn-green" onclick="advanceStep(${p.id})">✓</button>`:''}
+        ${p.status==='active'?`<button class="btn btn-sm" onclick="markStatus(${p.id},'booked')">📅</button>`:''}
+        <button class="btn btn-sm btn-ghost" onclick="delProspect(${p.id})">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ======= SCRIPTS =======
+function showScript(id, el) {
+  document.querySelectorAll('.script-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.script-content').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+function copyBlock(btn) {
+  const text = btn.parentElement.querySelector('.text').innerText;
+  navigator.clipboard.writeText(text).then(()=>{ btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000); });
+}
+
+// ======= OVERVIEW =======
+function renderOverview() {
+  const lt = lTot(); const dt = dTot();
+  document.getElementById('ov-loom').innerHTML=`<table class="tbl"><tr><td>Looms Sent</td><td><strong>${lt.sent}</strong></td></tr><tr><td>Views</td><td><strong>${lt.seen}</strong> <span class="rate">${pct(lt.seen,lt.sent)}</span></td></tr><tr><td>Replies</td><td><strong>${lt.replied}</strong> <span class="rate">${pct(lt.replied,lt.seen)}</span></td></tr><tr><td>Booked</td><td><strong>${lt.booked}</strong></td></tr><tr><td>Closed</td><td><strong style="color:#c0392b">${lt.closed}</strong></td></tr></table>`;
+  document.getElementById('ov-dm').innerHTML=`<table class="tbl"><tr><td>DMs Sent</td><td><strong>${dt.sent}</strong></td></tr><tr><td>Replies</td><td><strong>${dt.replies}</strong> <span class="rate">${pct(dt.replies,dt.sent)}</span></td></tr><tr><td>Looms Sent</td><td><strong>${dt.looms}</strong></td></tr><tr><td>Calls Booked</td><td><strong style="color:#c0392b">${dt.booked}</strong></td></tr></table>`;
+
+  const allDates=[...new Set([...looms.map(d=>d.date),...dms.map(d=>d.date)])].sort().slice(-30);
+  const lMap=Object.fromEntries(looms.map(d=>[d.date,d.sent]));
+  const dMap=Object.fromEntries(dms.map(d=>[d.date,d.sent]));
+  mkChart('overviewChart','line',allDates.map(d=>d.slice(5)),[{label:'Looms Sent',data:allDates.map(d=>lMap[d]||0),borderColor:'#c0392b',backgroundColor:'#c0392b22',fill:true,tension:0.3},{label:'DMs Sent',data:allDates.map(d=>dMap[d]||0),borderColor:'#3498db',backgroundColor:'#3498db22',fill:true,tension:0.3}]);
+}
+
+// ======= GOAL CALC =======
+function calcGoals() {
+  const rev=parseFloat(document.getElementById('g-rev')?.value)||83333;
+  const ticket=parseFloat(document.getElementById('g-ticket')?.value)||5000;
+  const cr=parseFloat(document.getElementById('g-close')?.value)/100||0.25;
+  goals = {rev,ticket,close:document.getElementById('g-close')?.value};
+  saveToSheets('goals', goals);
+  const lt=lTot();
+  const vr=lt.sent>0?lt.seen/lt.sent:0.3;
+  const rr=lt.seen>0?lt.replied/lt.seen:0.25;
+  const br=lt.replied>0?lt.booked/lt.replied:0.4;
+  const clients=Math.ceil(rev/ticket);
+  const calls=Math.ceil(clients/cr);
+  const views=Math.ceil(calls/(br||0.4));
+  const loomsSend=Math.ceil(views/(vr||0.3));
+  const dmsDay=Math.ceil((loomsSend/0.1)/30);
+  if(document.getElementById('gn-clients')) {
+    document.getElementById('gn-clients').textContent=clients;
+    document.getElementById('gn-calls').textContent=calls;
+    document.getElementById('gn-views').textContent=views;
+    document.getElementById('gn-looms').textContent=Math.ceil(loomsSend/30);
+    document.getElementById('gn-dms').textContent=Math.max(dmsDay,100);
+  }
+}
+
+// ======= DELETE =======
+function delLoom(i){if(confirm('Delete?')){looms.splice(i,1);save();renderLoom();}}
+function delDM(i){if(confirm('Delete?')){dms.splice(i,1);save();renderDM();}}
+
+// ======= CHART HELPER =======
+function mkChart(id,type,labels,datasets,showLegend=true){
+  if(charts[id]) charts[id].destroy();
+  const el=document.getElementById(id);
+  if(!el) return;
+  charts[id]=new Chart(el,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:showLegend,labels:{color:'#666',padding:10}}},scales:type!=='doughnut'?{x:{ticks:{color:'#555'},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#555'},grid:{color:'#1a1a1a'}}}:{}}});
+}
+
+function renderAll(){renderLoom();renderDM();}
+</script>
+</body>
+</html>

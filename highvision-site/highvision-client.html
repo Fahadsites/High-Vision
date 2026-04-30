@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>High Vision — Client Packages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,400;1,700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#D41515;--red-b:#FF2020;
+  --bg:#080808;--bg2:#0e0e0e;--bg3:#141414;--bg4:#1c1c1c;
+  --white:#F2F2F2;--grey:#888;--grey2:#555;
+  --border:rgba(255,255,255,0.06);--border-r:rgba(212,21,21,0.25);
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--white);font-family:'Montserrat',sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+
+/* NOISE */
+body::after{content:'';position:fixed;inset:0;z-index:9000;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");opacity:.4;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:18px 64px;background:rgba(8,8,8,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo svg{width:34px;height:34px;}
+.logo-txt{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;line-height:1.1;}
+.logo-txt small{display:block;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:600;letter-spacing:4px;color:var(--grey);}
+.nav-badge{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);border:1px solid var(--border-r);padding:5px 12px;border-radius:4px;background:rgba(212,21,21,0.06);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 24px 80px;position:relative;overflow:hidden;}
+.hero-glow{position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse at center top,rgba(212,21,21,0.12) 0%,transparent 65%);pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border-r);background:rgba(212,21,21,0.07);color:var(--red);font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:7px 16px;border-radius:4px;margin-bottom:32px;}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(40px,6.5vw,80px);font-weight:800;line-height:1.06;letter-spacing:-1.5px;max-width:840px;margin-bottom:20px;}
+.hero h1 em{font-style:italic;color:var(--red);}
+.hero-sub{font-size:16px;color:var(--grey);max-width:520px;margin:0 auto 48px;line-height:1.8;}
+.btn-red{background:var(--red);color:#fff;font-weight:700;font-size:13px;padding:13px 28px;border-radius:6px;border:none;display:inline-block;transition:background .2s,transform .2s,box-shadow .2s;font-family:'Montserrat',sans-serif;cursor:pointer;}
+.btn-red:hover{background:var(--red-b);transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,21,21,0.35);}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(212,21,21,0.55),0 8px 24px rgba(212,21,21,0.25)}70%{box-shadow:0 0 0 18px rgba(212,21,21,0),0 8px 24px rgba(212,21,21,0.25)}100%{box-shadow:0 0 0 0 rgba(212,21,21,0),0 8px 24px rgba(212,21,21,0.25)}}
+.btn-pulse{animation:pulse-ring 2.2s ease infinite;}
+
+/* SECTION COMMON */
+.sec-header{text-align:center;margin-bottom:60px;}
+.sec-tag{display:inline-block;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--grey);border:1px solid var(--border);padding:5px 14px;border-radius:4px;margin-bottom:18px;}
+.sec-h{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:10px;}
+.sec-h em{font-style:italic;color:var(--red);}
+.sec-sub{color:var(--grey);font-size:15px;}
+
+/* PACKAGES */
+.packages{padding:100px 64px;background:var(--bg);}
+.pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto;}
+.pkg-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:36px 30px;position:relative;transition:transform .25s,border-color .25s;}
+.pkg-card:hover{transform:translateY(-6px);border-color:var(--border-r);}
+.pkg-card.featured{border-color:var(--border-r);background:linear-gradient(160deg,#160808 0%,var(--bg3) 60%);}
+.feat-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 16px;border-radius:4px;white-space:nowrap;}
+.pkg-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:800;margin-bottom:6px;}
+.pkg-price{font-family:'Playfair Display',serif;font-size:40px;font-weight:800;color:var(--red);line-height:1;margin-bottom:4px;}
+.pkg-price span{font-size:14px;font-weight:500;color:var(--grey);font-family:'Montserrat',sans-serif;}
+.pkg-sub{font-size:13px;color:var(--grey);margin-bottom:24px;line-height:1.6;}
+.pkg-rule{height:1px;background:var(--border);margin-bottom:22px;}
+.pkg-list{list-style:none;margin-bottom:28px;}
+.pkg-list li{font-size:13px;color:var(--grey);padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
+.pkg-list li::before{content:'→';color:var(--red);font-size:11px;flex-shrink:0;margin-top:2px;}
+.pkg-list li strong{color:var(--white);}
+.pkg-list li .free-tag{background:rgba(212,21,21,0.1);color:var(--red);font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid var(--border-r);margin-left:6px;white-space:nowrap;}
+.pkg-btn{width:100%;padding:13px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--white);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.3px;font-family:'Montserrat',sans-serif;}
+.pkg-btn:hover{border-color:var(--red);color:var(--red);}
+.pkg-card.featured .pkg-btn{background:var(--red);border-color:var(--red);color:#fff;}
+.pkg-card.featured .pkg-btn:hover{background:var(--red-b);}
+
+/* TRACKING SECTION */
+.tracking{padding:100px 64px;background:var(--bg2);}
+.track-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;max-width:1100px;margin:0 auto;}
+.track-visual{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.track-stat{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:22px 20px;transition:border-color .2s;}
+.track-stat:hover{border-color:var(--border-r);}
+.track-ico{font-size:22px;margin-bottom:10px;}
+.track-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:800;color:var(--red);line-height:1;margin-bottom:4px;}
+.track-label{font-size:12px;color:var(--grey);line-height:1.5;}
+.track-content .pill{display:inline-block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red);border:1px solid var(--border-r);padding:5px 12px;border-radius:4px;margin-bottom:22px;}
+.track-content h2{font-family:'Playfair Display',serif;font-size:clamp(28px,3.5vw,44px);font-weight:800;line-height:1.1;letter-spacing:-1px;margin-bottom:18px;}
+.track-content h2 em{font-style:italic;color:var(--red);}
+.track-content p{color:var(--grey);font-size:15px;line-height:1.85;margin-bottom:14px;}
+.track-steps{margin-top:28px;display:flex;flex-direction:column;gap:12px;}
+.track-step{display:flex;align-items:flex-start;gap:14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.track-step-num{font-family:'Playfair Display',serif;font-size:20px;font-weight:800;color:rgba(212,21,21,0.25);line-height:1;flex-shrink:0;width:28px;}
+.track-step-title{font-size:13px;font-weight:700;margin-bottom:3px;}
+.track-step-desc{font-size:12px;color:var(--grey);line-height:1.6;}
+
+/* PORTFOLIO — ALL SECTIONS */
+.portfolio{padding:100px 64px;background:var(--bg);}
+.port-section{max-width:1200px;margin:0 auto 80px;}
+.port-section:last-child{margin-bottom:0;}
+.port-section-label{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.port-section-tag{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--grey);border:1px solid var(--border);padding:5px 14px;border-radius:4px;}
+.port-section-line{flex:1;height:1px;background:var(--border);}
+
+/* 16:9 grid (SaaS + YouTube) */
+.port-grid{display:flex;flex-wrap:wrap;gap:16px;}
+.port-grid .port-card{flex:0 0 calc(25% - 12px);min-width:0;}
+.port-grid-yt{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:700px;}
+
+/* 9:16 grid (Short-form) — 5 portrait cards */
+.port-grid-sf{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:1200px;}
+.port-grid-sf .port-card{min-width:0;}
+
+.port-card{border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--bg3);cursor:pointer;transition:transform .25s,border-color .25s;}
+.port-card:hover{transform:translateY(-5px);border-color:var(--border-r);}
+.port-thumb{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#111 center/cover no-repeat;}
+.port-thumb.landscape{aspect-ratio:16/9;}
+.port-thumb.portrait{aspect-ratio:9/16;}
+.port-ph{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.08) 100%);}
+.play-btn{position:absolute;width:46px;height:46px;border-radius:50%;background:rgba(212,21,21,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(212,21,21,.4);transition:transform .25s,background .2s;}
+.port-card:hover .play-btn{transform:scale(1.15);background:var(--red-b);}
+.play-btn svg{width:14px;fill:white;margin-left:3px;}
+.port-info{padding:12px 14px;}
+.port-name{font-size:13px;font-weight:700;margin-bottom:6px;}
+.port-badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.5px;padding:3px 9px;border-radius:4px;background:rgba(212,21,21,.1);color:var(--red);border:1px solid var(--border-r);}
+.port-badge.lnch{background:rgba(120,70,200,.1);color:#a070e8;border-color:rgba(120,70,200,.2);}
+.port-badge.yt{background:rgba(255,0,0,.08);color:#ff4444;border-color:rgba(255,0,0,.2);}
+.port-badge.sf{background:rgba(0,180,120,.08);color:#00c896;border-color:rgba(0,180,120,.2);}
+
+/* VIDEO MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px;}
+.modal-overlay.open{display:flex;}
+.modal-box{width:100%;max-width:900px;border-radius:12px;overflow:hidden;border:1px solid var(--border-r);background:var(--bg3);position:relative;}
+.modal-close{position:absolute;top:14px;right:14px;z-index:10;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:var(--white);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s;}
+.modal-close:hover{background:var(--red);}
+.modal-video{aspect-ratio:16/9;width:100%;}
+.modal-video iframe{width:100%;height:100%;border:none;display:block;}
+.modal-title{padding:16px 20px;font-family:'Playfair Display',serif;font-size:17px;font-weight:700;}
+
+/* PROCESS */
+.process{padding:100px 64px;background:var(--bg2);}
+.proc5-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr auto 1fr;align-items:start;gap:0;max-width:1200px;margin:0 auto;}
+.proc5-step{text-align:center;padding:0 8px;opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease;}
+.proc5-step.in{opacity:1;transform:none;}
+.proc5-step:nth-child(1){transition-delay:.00s}
+.proc5-step:nth-child(3){transition-delay:.10s}
+.proc5-step:nth-child(5){transition-delay:.20s}
+.proc5-step:nth-child(7){transition-delay:.30s}
+.proc5-step:nth-child(9){transition-delay:.40s}
+.proc5-step:nth-child(11){transition-delay:.50s}
+.proc5-arrow{color:var(--red);font-size:22px;opacity:.4;align-self:center;padding:0 4px;margin-top:-60px;}
+.proc5-icon{width:68px;height:68px;border-radius:16px;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;}
+.proc5-num{font-family:'Playfair Display',serif;font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;margin-bottom:6px;}
+.proc5-tag{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--grey2);margin-bottom:10px;border:1px solid var(--border);display:inline-block;padding:3px 9px;border-radius:3px;}
+.proc5-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:800;line-height:1.2;margin-bottom:8px;}
+.proc5-title em{font-style:italic;color:var(--red);display:block;}
+.proc5-desc{font-size:12px;color:var(--grey);line-height:1.75;}
+
+/* CTA */
+.final{padding:120px 24px;text-align:center;position:relative;overflow:hidden;}
+.final::before{content:'';position:absolute;bottom:-60px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse at center bottom,rgba(212,21,21,0.12) 0%,transparent 65%);pointer-events:none;}
+.final h2{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,68px);font-weight:800;letter-spacing:-1.5px;line-height:1.05;max-width:780px;margin:0 auto 16px;}
+.final h2 em{font-style:italic;color:var(--red);}
+.final p{color:var(--grey);font-size:16px;margin-bottom:36px;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:24px 64px;display:flex;justify-content:space-between;align-items:center;}
+footer small{font-size:11px;color:rgba(255,255,255,.18);}
+
+/* REVEAL */
+.fade{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+.fade.in{opacity:1;transform:none;}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  nav{padding:15px 20px;}
+  .packages,.tracking,.portfolio,.process,.final{padding:70px 20px;}
+  .pkg-grid{grid-template-columns:1fr;}
+  .track-grid{grid-template-columns:1fr;gap:40px;}
+  .port-grid .port-card{flex:0 0 calc(50% - 8px);}
+  .port-grid-sf{grid-template-columns:repeat(2,1fr);}
+  .port-grid-sf .port-card:last-child:nth-child(odd){grid-column:1/2;}
+  .proc5-flow{grid-template-columns:1fr;gap:24px;}
+  .proc5-arrow{display:none;}
+  footer{padding:20px;flex-direction:column;gap:10px;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <svg viewBox="0 0 60 60" fill="none">
+      <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF3333"/><stop offset="100%" stop-color="#8B0000"/></linearGradient></defs>
+      <polygon points="30,4 56,22 56,38 30,56 4,38 4,22" fill="url(#rg)" opacity="0.12"/>
+      <polygon points="30,4 56,22 56,38 30,56 4,38 4,22" fill="none" stroke="url(#rg)" stroke-width="1.5"/>
+      <line x1="4" y1="22" x2="56" y2="38" stroke="url(#rg)" stroke-width="1.2" opacity="0.7"/>
+      <line x1="4" y1="38" x2="56" y2="22" stroke="url(#rg)" stroke-width="1.2" opacity="0.7"/>
+      <circle cx="30" cy="30" r="4" fill="url(#rg)"/>
+    </svg>
+    <div class="logo-txt">High Vision<small>Video Agency</small></div>
+  </div>
+  <div class="nav-badge">Private Client Page</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-tag">Packages & Pricing</div>
+  <h1>Everything you need to know<br>before we <em>get started.</em></h1>
+  <p class="hero-sub">This page is shared privately with our clients. Below you'll find our packages, how we work, and examples of our work — all in one place.</p>
+  <a href="#packages" class="btn-red btn-pulse" style="font-size:14px;padding:14px 32px;">View Packages →</a>
+</section>
+
+<!-- PACKAGES -->
+<section class="packages" id="packages">
+  <div class="sec-header fade">
+    <div class="sec-tag">Packages</div>
+    <h2 class="sec-h">Simple, transparent <em>pricing.</em></h2>
+    <p class="sec-sub">Start with a trial. Scale when you're ready.</p>
+  </div>
+  <div class="pkg-grid fade">
+
+    <!-- TRIAL -->
+    <div class="pkg-card">
+      <div class="pkg-name">Trial Package</div>
+      <div class="pkg-price">$500</div>
+      <div class="pkg-sub">Start here. See the quality before any long-term commitment.</div>
+      <div class="pkg-rule"></div>
+      <ul class="pkg-list">
+        <li><strong>4 short-form videos</strong> (reels/shorts)</li>
+        <li>Script written for every video</li>
+        <li>Motion graphics + captions</li>
+        <li><strong>5 day</strong> turnaround per video</li>
+        <li>1 revision per video</li>
+        <li>Delivered ready to post</li>
+      </ul>
+      <button class="pkg-btn" onclick="scrollToCall()">Get Started →</button>
+    </div>
+
+    <!-- MONTHLY -->
+    <div class="pkg-card featured">
+      <div class="feat-tag">Most Popular</div>
+      <div class="pkg-name">Monthly Package</div>
+      <div class="pkg-price">$2,500<span>/month</span></div>
+      <div class="pkg-sub">Consistent content every month, optimised based on performance data.</div>
+      <div class="pkg-rule"></div>
+      <ul class="pkg-list">
+        <li><strong>15 short-form videos/month</strong></li>
+        <li>Scripts included for all videos</li>
+        <li>Motion graphics + captions</li>
+        <li><strong>3 day</strong> turnaround per video</li>
+        <li>2 revisions per video</li>
+        <li>Monthly content calendar</li>
+        <li>Performance tracking — views, retention, reach</li>
+        <li>Strategy adjusted monthly based on data</li>
+      </ul>
+      <button class="pkg-btn" onclick="scrollToCall()">Get Started →</button>
+    </div>
+
+    <!-- MONTHLY + YOUTUBE -->
+    <div class="pkg-card">
+      <div class="pkg-name">Monthly + YouTube</div>
+      <div class="pkg-price">$3,500<span>/month</span></div>
+      <div class="pkg-sub">Everything in Monthly, plus long-form YouTube content to build authority.</div>
+      <div class="pkg-rule"></div>
+      <ul class="pkg-list">
+        <li><strong>15 short-form videos/month</strong></li>
+        <li><strong>4 YouTube videos/month</strong></li>
+        <li>Custom thumbnails <span class="free-tag">FREE</span></li>
+        <li>Scripts included for everything</li>
+        <li>Motion graphics + captions</li>
+        <li><strong>3 day</strong> turnaround on reels</li>
+        <li><strong>5 day</strong> turnaround on YouTube</li>
+        <li>2 revisions per video</li>
+        <li>Monthly content calendar</li>
+        <li>Performance tracking across all content</li>
+        <li>Strategy adjusted monthly based on data</li>
+      </ul>
+      <button class="pkg-btn" onclick="scrollToCall()">Get Started →</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- TRACKING -->
+<section class="tracking" id="tracking">
+  <div class="track-grid">
+    <div class="track-content fade">
+      <div class="pill">How We Grow You</div>
+      <h2>We don't just make videos.<br>We track what <em>actually works.</em></h2>
+      <p>Every month we pull performance data on every video — retention rates, view counts, reach, engagement. We use that data to figure out what's working and double down on it.</p>
+      <p>Most agencies deliver and disappear. We stay in the loop every month so the content keeps improving.</p>
+      <div class="track-steps">
+        <div class="track-step">
+          <div class="track-step-num">01</div>
+          <div>
+            <div class="track-step-title">Monthly Performance Report</div>
+            <div class="track-step-desc">Full breakdown of every video — retention, views, reach, best performers.</div>
+          </div>
+        </div>
+        <div class="track-step">
+          <div class="track-step-num">02</div>
+          <div>
+            <div class="track-step-title">Content Strategy Review</div>
+            <div class="track-step-desc">We review what worked, what didn't, and adjust the next month's content plan.</div>
+          </div>
+        </div>
+        <div class="track-step">
+          <div class="track-step-num">03</div>
+          <div>
+            <div class="track-step-title">Double Down on Winners</div>
+            <div class="track-step-desc">Best performing formats get replicated. Weak formats get replaced.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="track-visual fade">
+      <div class="track-stat">
+        <div class="track-ico">📈</div>
+        <div class="track-num">3.7M+</div>
+        <div class="track-label">organic views<br>on our content</div>
+      </div>
+      <div class="track-stat">
+        <div class="track-ico">🎬</div>
+        <div class="track-num">7+</div>
+        <div class="track-label">brands delivered<br>video content</div>
+      </div>
+      <div class="track-stat">
+        <div class="track-ico">⚡</div>
+        <div class="track-num">3 days</div>
+        <div class="track-label">average turnaround<br>per video</div>
+      </div>
+      <div class="track-stat">
+        <div class="track-ico">🎯</div>
+        <div class="track-num">100%</div>
+        <div class="track-label">Figma-first<br>production</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section class="portfolio" id="work">
+  <div class="sec-header fade">
+    <div class="sec-tag">Our Work</div>
+    <h2 class="sec-h">Videos that <em>perform.</em></h2>
+    <p class="sec-sub">Click any video to watch.</p>
+  </div>
+
+  <!-- SAAS VIDEOS -->
+  <div class="port-section fade">
+    <div class="port-section-label">
+      <div class="port-section-tag">SaaS Videos</div>
+      <div class="port-section-line"></div>
+    </div>
+    <div class="port-grid">
+      <div class="port-card" data-title="Signal" data-type="vimeo" data-src="https://player.vimeo.com/video/1183662678?badge=0&autopause=0&player_id=0&app_id=58479" data-thumb="https://drive.google.com/thumbnail?id=1ku8xCKzLNr7DqS58UFrFPsrY6evEYlXp&sz=w600">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Signal</div><span class="port-badge lnch">Product Launch</span></div>
+      </div>
+      <div class="port-card" data-title="Kite" data-type="vimeo" data-src="https://player.vimeo.com/video/1183662834?badge=0&autopause=0&player_id=0&app_id=58479" data-thumb="https://drive.google.com/thumbnail?id=1tYBik1m0Qn0GTQphox2cmujZgi6kixgZ&sz=w600">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Kite</div><span class="port-badge">Product Demo</span></div>
+      </div>
+      <div class="port-card" data-title="Orbit" data-type="vimeo" data-src="https://player.vimeo.com/video/1183662237?badge=0&autopause=0&player_id=0&app_id=58479" data-thumb="https://drive.google.com/thumbnail?id=1FiDuQd9uOrCsiwn5l1gTsKNh8Smtyt_F&sz=w600">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Orbit</div><span class="port-badge">Product Demo</span></div>
+      </div>
+      <div class="port-card" data-title="KAI" data-type="vimeo" data-src="https://player.vimeo.com/video/1183663037?badge=0&autopause=0&player_id=0&app_id=58479" data-thumb="https://drive.google.com/thumbnail?id=1bql2lT3pGx_giqBWy2gfv5OzKqx_EPd4&sz=w600">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">KAI</div><span class="port-badge">Product Demo</span></div>
+      </div>
+      <div class="port-card" data-title="FixerFind" data-type="vimeo" data-src="https://player.vimeo.com/video/1183663311?badge=0&autopause=0&player_id=0&app_id=58479">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">FixerFind</div><span class="port-badge lnch">Product Launch</span></div>
+      </div>
+      <div class="port-card" data-title="Moonward" data-type="vimeo" data-src="https://player.vimeo.com/video/1183663401?badge=0&autopause=0&player_id=0&app_id=58479">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Moonward</div><span class="port-badge">Product Demo</span></div>
+      </div>
+      <div class="port-card" data-title="Seliose AI" data-type="vimeo" data-src="https://player.vimeo.com/video/1183663112?badge=0&autopause=0&player_id=0&app_id=58479">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Seliose AI</div><span class="port-badge">Product Demo</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YOUTUBE VIDEOS -->
+  <div class="port-section fade">
+    <div class="port-section-label">
+      <div class="port-section-tag">YouTube Videos</div>
+      <div class="port-section-line"></div>
+    </div>
+    <div class="port-grid-yt">
+      <div class="port-card" data-title="YouTube Video 1" data-type="drive" data-src="https://drive.google.com/file/d/1pqrZwOZVWtzfHBccbfBdjWlFLB8KvKso/preview" data-thumb="https://drive.google.com/thumbnail?id=1pqrZwOZVWtzfHBccbfBdjWlFLB8KvKso&sz=w600">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">YouTube Video 1</div><span class="port-badge yt">YouTube</span></div>
+      </div>
+      <div class="port-card" data-title="YouTube Video 2" data-type="drive" data-src="https://drive.google.com/file/d/1cxTj_meg4Qgdnom2yVlmOAeY9eeH8hSM/preview" data-thumb="https://drive.google.com/thumbnail?id=1cxTj_meg4Qgdnom2yVlmOAeY9eeH8hSM&sz=w600">
+        <div class="port-thumb landscape"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">YouTube Video 2</div><span class="port-badge yt">YouTube</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHORT-FORM VIDEOS -->
+  <div class="port-section fade">
+    <div class="port-section-label">
+      <div class="port-section-tag">Short-Form Content</div>
+      <div class="port-section-line"></div>
+    </div>
+    <div class="port-grid-sf">
+      <div class="port-card" data-title="Short-Form 1" data-type="drive" data-src="https://drive.google.com/file/d/1rQ4RsTS_5f1mXizcremYYhRsBpO4TFSk/preview" data-thumb="https://drive.google.com/thumbnail?id=1rQ4RsTS_5f1mXizcremYYhRsBpO4TFSk&sz=w600">
+        <div class="port-thumb portrait"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Short-Form 1</div><span class="port-badge sf">Short-Form</span></div>
+      </div>
+      <div class="port-card" data-title="Short-Form 2" data-type="drive" data-src="https://drive.google.com/file/d/1nEhWPLt1v2uVwrpy54wD3w8bOR5zFkf4/preview" data-thumb="https://drive.google.com/thumbnail?id=1nEhWPLt1v2uVwrpy54wD3w8bOR5zFkf4&sz=w600">
+        <div class="port-thumb portrait"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Short-Form 2</div><span class="port-badge sf">Short-Form</span></div>
+      </div>
+      <div class="port-card" data-title="Short-Form 3" data-type="drive" data-src="https://drive.google.com/file/d/1uutgh00R2GoDLV-zXN-b4dZl07ZFYRAf/preview" data-thumb="https://drive.google.com/thumbnail?id=1uutgh00R2GoDLV-zXN-b4dZl07ZFYRAf&sz=w600">
+        <div class="port-thumb portrait"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Short-Form 3</div><span class="port-badge sf">Short-Form</span></div>
+      </div>
+      <div class="port-card" data-title="Short-Form 4" data-type="drive" data-src="https://drive.google.com/file/d/1rhiepVysgGnNbCqKVgiQmoEZqAr8TTdE/preview" data-thumb="https://drive.google.com/thumbnail?id=1rhiepVysgGnNbCqKVgiQmoEZqAr8TTdE&sz=w600">
+        <div class="port-thumb portrait"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Short-Form 4</div><span class="port-badge sf">Short-Form</span></div>
+      </div>
+      <div class="port-card" data-title="Short-Form 5" data-type="drive" data-src="https://drive.google.com/file/d/10rH3brgkW_UhTU382dflokSOCqSOqyUa/preview" data-thumb="https://drive.google.com/thumbnail?id=10rH3brgkW_UhTU382dflokSOCqSOqyUa&sz=w600">
+        <div class="port-thumb portrait"><div class="port-ph"></div><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        <div class="port-info"><div class="port-name">Short-Form 5</div><span class="port-badge sf">Short-Form</span></div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- PROCESS -->
+<section class="process" id="process">
+  <div class="sec-header fade">
+    <div class="sec-tag">How It Works</div>
+    <h2 class="sec-h">Built on data.<br><em>Not guesswork.</em></h2>
+    <p class="sec-sub">Every video we make is backed by real research — your competitors, your buyers, and what's already working.</p>
+  </div>
+  <div class="proc5-flow" id="proc5-flow">
+    <div class="proc5-step">
+      <div class="proc5-icon">🔍</div>
+      <div class="proc5-num">01</div>
+      <div class="proc5-tag">Research</div>
+      <div class="proc5-title">Competitor<br><em>Deep Dive</em></div>
+      <div class="proc5-desc">We study your top competitors — what formats are working, what hooks are getting views, what's driving their growth.</div>
+    </div>
+    <div class="proc5-arrow">→</div>
+    <div class="proc5-step">
+      <div class="proc5-icon">🎙️</div>
+      <div class="proc5-num">02</div>
+      <div class="proc5-tag">Buyer Insights</div>
+      <div class="proc5-title">Pain Point<br><em>Analysis</em></div>
+      <div class="proc5-desc">We go through your sales calls and audience data to find exactly what your buyers say, fear, and want — that language goes into every script.</div>
+    </div>
+    <div class="proc5-arrow">→</div>
+    <div class="proc5-step">
+      <div class="proc5-icon">✅</div>
+      <div class="proc5-num">03</div>
+      <div class="proc5-tag">Strategy</div>
+      <div class="proc5-title">Proven<br><em>Video Formats</em></div>
+      <div class="proc5-desc">We build your content around formats already proven to work in your niche — not experiments, not templates.</div>
+    </div>
+    <div class="proc5-arrow">→</div>
+    <div class="proc5-step">
+      <div class="proc5-icon">✍️</div>
+      <div class="proc5-num">04</div>
+      <div class="proc5-tag">Script</div>
+      <div class="proc5-title">Data-Driven<br><em>Scripts</em></div>
+      <div class="proc5-desc">Every script is written around real buyer language and proven hooks. You approve before we shoot anything.</div>
+    </div>
+    <div class="proc5-arrow">→</div>
+    <div class="proc5-step">
+      <div class="proc5-icon">🎬</div>
+      <div class="proc5-num">05</div>
+      <div class="proc5-tag">Production</div>
+      <div class="proc5-title">Film &<br><em>Edit</em></div>
+      <div class="proc5-desc">We shoot, edit, add motion graphics, captions, and sound. Delivered in 3 days. Ready to post immediately.</div>
+    </div>
+    <div class="proc5-arrow">→</div>
+    <div class="proc5-step">
+      <div class="proc5-icon">📊</div>
+      <div class="proc5-num">06</div>
+      <div class="proc5-tag">Optimise</div>
+      <div class="proc5-title">Track &<br><em>Improve</em></div>
+      <div class="proc5-desc">Every month we review retention, views, and reach. What wins gets doubled down on. What doesn't gets replaced.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="final" id="call">
+  <div class="sec-tag fade">Next Step</div>
+  <h2 class="fade" style="margin-top:20px;">Ready to get <em>started?</em></h2>
+  <p class="fade">Book a free 20-minute call. We'll map out exactly what we'd make for you.</p>
+  <div class="fade">
+    <a href="https://calendly.com/fahadvisuals/strategycalls" target="_blank" class="btn-red btn-pulse" style="font-size:15px;padding:15px 36px;">Book a Call →</a>
+  </div>
+</section>
+
+<!-- VIDEO MODAL -->
+<div class="modal-overlay" id="videoModal">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-video"><iframe id="modalIframe" src="" allowfullscreen allow="autoplay"></iframe></div>
+    <div class="modal-title" id="modalTitle"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="logo">
+    <svg viewBox="0 0 60 60" fill="none" width="28" height="28">
+      <defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF3333"/><stop offset="100%" stop-color="#8B0000"/></linearGradient></defs>
+      <polygon points="30,4 56,22 56,38 30,56 4,38 4,22" fill="none" stroke="url(#rg2)" stroke-width="1.5"/>
+      <circle cx="30" cy="30" r="3.5" fill="url(#rg2)"/>
+    </svg>
+    <div class="logo-txt" style="font-size:16px;">High Vision</div>
+  </div>
+  <small>© 2026 High Vision. Private client page — not for distribution.</small>
+</footer>
+
+<script src="https://player.vimeo.com/api/player.js"></script>
+<script>
+// SCROLL REVEAL
+const obs = new IntersectionObserver(es => es.forEach(e => {
+  if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); }
+}),{threshold:0.07});
+document.querySelectorAll('.fade').forEach(el => obs.observe(el));
+
+// PROCESS ANIMATION
+new IntersectionObserver(es=>{
+  if(es[0].isIntersecting) document.querySelectorAll('.proc5-step').forEach(s=>s.classList.add('in'));
+},{threshold:0.15}).observe(document.getElementById('proc5-flow'));
+
+// VIDEO THUMBNAILS
+document.querySelectorAll('.port-card[data-thumb]').forEach(card=>{
+  const thumb = card.querySelector('.port-thumb');
+  if(thumb) thumb.style.backgroundImage=`url(${card.dataset.thumb})`;
+});
+
+// INLINE VIDEO PLAYBACK — handles both Vimeo and Google Drive
+document.querySelectorAll('.port-card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    if(card.querySelector('iframe')) return;
+    const src = card.dataset.src;
+    const type = card.dataset.type || 'vimeo';
+    if(!src) return;
+    const thumb = card.querySelector('.port-thumb');
+    thumb.style.background='#000';
+    let iframeSrc = src;
+    if(type === 'vimeo'){
+      iframeSrc = src + (src.includes('?')?'&':'?') + 'autoplay=1';
+    }
+    // Drive preview URLs already handle playback natively
+    thumb.innerHTML=`<iframe src="${iframeSrc}" frameborder="0"
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowfullscreen
+      style="position:absolute;inset:0;width:100%;height:100%;border:none;"></iframe>`;
+  });
+});
+
+function scrollToCall(){
+  document.getElementById('call').scrollIntoView({behavior:'smooth'});
+}
+
+// VIMEO THUMBNAILS
+async function loadVimeoThumb(id, el){
+  try {
+    const res = await fetch(`https://vimeo.com/api/oembed.json?url=https://vimeo.com/${id}&width=640`);
+    const data = await res.json();
+    if(data.thumbnail_url) el.style.backgroundImage = `url(${data.thumbnail_url})`;
+  } catch(e){}
+}
+
+document.querySelectorAll('[data-type="vimeo"][data-src]').forEach(card=>{
+  const thumb = card.querySelector('.port-thumb');
+  if(!thumb) return;
+  const id = card.dataset.src.match(/video\/(\d+)/)?.[1];
+  if(id) loadVimeoThumb(id, thumb);
+});
+</script>
+</body>
+</html>
